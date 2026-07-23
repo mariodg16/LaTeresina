@@ -1,0 +1,206 @@
+{
+  "deck": "napoletane",
+  "count": 40,
+  "cards": [
+    {
+      "value": "asso",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/asso-bastoni.jpg"
+    },
+    {
+      "value": "asso",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/asso-coppe.jpg"
+    },
+    {
+      "value": "asso",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/asso-denari.jpg"
+    },
+    {
+      "value": "asso",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/asso-spade.jpg"
+    },
+    {
+      "value": "cavallo",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/cavallo-bastoni.jpg"
+    },
+    {
+      "value": "cavallo",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/cavallo-coppe.jpg"
+    },
+    {
+      "value": "cavallo",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/cavallo-denari.jpg"
+    },
+    {
+      "value": "cavallo",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/cavallo-spade.jpg"
+    },
+    {
+      "value": "cinque",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/cinque-bastoni.jpg"
+    },
+    {
+      "value": "cinque",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/cinque-coppe.jpg"
+    },
+    {
+      "value": "cinque",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/cinque-denari.jpg"
+    },
+    {
+      "value": "cinque",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/cinque-spade.jpg"
+    },
+    {
+      "value": "due",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/due-bastoni.jpg"
+    },
+    {
+      "value": "due",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/due-coppe.jpg"
+    },
+    {
+      "value": "due",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/due-denari.jpg"
+    },
+    {
+      "value": "due",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/due-spade.jpg"
+    },
+    {
+      "value": "fante",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/fante-bastoni.jpg"
+    },
+    {
+      "value": "fante",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/fante-coppe.jpg"
+    },
+    {
+      "value": "fante",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/fante-denari.jpg"
+    },
+    {
+      "value": "fante",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/fante-spade.jpg"
+    },
+    {
+      "value": "quattro",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/quattro-bastoni.jpg"
+    },
+    {
+      "value": "quattro",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/quattro-coppe.jpg"
+    },
+    {
+      "value": "quattro",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/quattro-denari.jpg"
+    },
+    {
+      "value": "quattro",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/quattro-spade.jpg"
+    },
+    {
+      "value": "re",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/re-bastoni.jpg"
+    },
+    {
+      "value": "re",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/re-coppe.jpg"
+    },
+    {
+      "value": "re",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/re-denari.jpg"
+    },
+    {
+      "value": "re",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/re-spade.jpg"
+    },
+    {
+      "value": "sei",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/sei-bastoni.jpg"
+    },
+    {
+      "value": "sei",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/sei-coppe.jpg"
+    },
+    {
+      "value": "sei",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/sei-denari.jpg"
+    },
+    {
+      "value": "sei",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/sei-spade.jpg"
+    },
+    {
+      "value": "sette",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/sette-bastoni.jpg"
+    },
+    {
+      "value": "sette",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/sette-coppe.jpg"
+    },
+    {
+      "value": "sette",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/sette-denari.jpg"
+    },
+    {
+      "value": "sette",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/sette-spade.jpg"
+    },
+    {
+      "value": "tre",
+      "suit": "bastoni",
+      "src": "/__mockup/images/cards/napoletane/tre-bastoni.jpg"
+    },
+    {
+      "value": "tre",
+      "suit": "coppe",
+      "src": "/__mockup/images/cards/napoletane/tre-coppe.jpg"
+    },
+    {
+      "value": "tre",
+      "suit": "denari",
+      "src": "/__mockup/images/cards/napoletane/tre-denari.jpg"
+    },
+    {
+      "value": "tre",
+      "suit": "spade",
+      "src": "/__mockup/images/cards/napoletane/tre-spade.jpg"
+    }
+  ]
+}
