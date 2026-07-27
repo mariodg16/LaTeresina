@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "La Teresina"
+version = "1.0.0"
+id = "artifacts/card-game"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18956
+
+[services.development]
+run = "pnpm --filter @workspace/card-game run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/card-game", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/card-game/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18956"
+BASE_PATH = "/"
