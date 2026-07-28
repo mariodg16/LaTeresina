@@ -82,7 +82,8 @@ export function setupSocketIO(io: Server) {
           if (room.phase !== "lobby") { callback({ ok: false, error: "Partita già iniziata" }); return; }
           if (room.players.length < 2) { callback({ ok: false, error: "Servono almeno 2 giocatori" }); return; }
 
-          const mode = data?.mode === 2 ? 2 : 1;
+          const raw = Number(data?.mode);
+          const mode: 1 | 2 | 3 = raw === 2 ? 2 : raw === 3 ? 3 : 1;
           const ok = dealCards(room, mode);
           if (!ok) { callback({ ok: false, error: "Errore nella distribuzione" }); return; }
 
