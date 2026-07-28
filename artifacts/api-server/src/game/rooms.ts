@@ -22,6 +22,7 @@ export function createRoom(socketId: string, playerName: string, password: strin
     hand: [],
     isDealer: true,
     isFirstPlayer: false,
+    shownCardIds: [],
   };
   const room: Room = {
     code,
@@ -64,6 +65,7 @@ export function joinRoom(
     hand: [],
     isDealer: false,
     isFirstPlayer,
+    shownCardIds: [],
   });
 
   // Recompute isFirstPlayer: always index 1 (next to dealer)
@@ -214,6 +216,15 @@ export function discardCard(
   return true;
 }
 
+/** Update which cards a player is showing to opponents */
+export function setShownCards(room: Room, socketId: string, cardIds: string[]): boolean {
+  const player = room.players.find((p) => p.socketId === socketId);
+  if (!player) return false;
+  // Only allow showing cards that are actually in the player's hand
+  player.shownCardIds = cardIds.filter((id) => player.hand.some((c) => c.id === id));
+  return true;
+}
+
 /** Build the public room state (no private hands) */
 export function buildRoomState(room: Room): RoomState {
   const playerViews: PlayerView[] = room.players.map((p) => ({
@@ -223,6 +234,7 @@ export function buildRoomState(room: Room): RoomState {
     isFirstPlayer: p.isFirstPlayer,
     cardCount: p.hand.length,
     visibleCards: p.hand.filter((c) => c.faceUp),
+    shownCards: p.hand.filter((c) => p.shownCardIds.includes(c.id)),
   }));
 
   const currentDiscardPlayerId =

@@ -8,6 +8,7 @@ import {
   dealCards,
   revealTableCard,
   discardCard,
+  setShownCards,
   buildRoomState,
   buildTableState,
 } from "./rooms.js";
@@ -152,6 +153,23 @@ export function setupSocketIO(io: Server) {
         } catch (err) {
           logger.error({ err }, "discard_card error");
           callback({ ok: false, error: "Errore nello scarto" });
+        }
+      }
+    );
+
+    // ── Show cards to opponents ──────────────────────────────────────────────
+    socket.on(
+      "show_cards",
+      (data: { cardIds: string[] }) => {
+        try {
+          const room = getRoomBySocket(socket.id);
+          if (!room || room.phase !== "playing") return;
+          const cardIds = Array.isArray(data?.cardIds) ? data.cardIds.map(String) : [];
+          setShownCards(room, socket.id, cardIds);
+          // Broadcast updated room state so all players see the shown cards
+          io.to(room.code).emit("room_state", buildRoomState(room));
+        } catch (err) {
+          logger.error({ err }, "show_cards error");
         }
       }
     );

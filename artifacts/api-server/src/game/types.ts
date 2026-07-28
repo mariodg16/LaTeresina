@@ -14,6 +14,7 @@ export interface Player {
   hand: Card[];
   isDealer: boolean;
   isFirstPlayer: boolean; // "chi sta di mano" — giocatore alla sinistra del mazziere
+  shownCardIds: string[]; // carte che il giocatore sta mostrando agli avversari
 }
 
 export type GamePhase =
@@ -42,6 +43,8 @@ export interface PlayerView {
   cardCount: number;
   /** Carte scoperte visibili a tutti (es. la quinta carta in Modalità 1) */
   visibleCards: Card[];
+  /** Carte della mano che il giocatore sta mostrando per il punto */
+  shownCards: Card[];
 }
 
 export interface RoomState {

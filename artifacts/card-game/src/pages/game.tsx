@@ -8,7 +8,7 @@ import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Game() {
-  const { roomState, playerName, hand, discardCard, revealTableCard } = useGame();
+  const { roomState, playerName, hand, discardCard, revealTableCard, showCards } = useGame();
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -20,6 +20,14 @@ export default function Game() {
   useEffect(() => {
     setSelectedIds(new Set());
   }, [roomState?.phase]);
+
+  // Broadcast selected hand cards to opponents whenever selection changes
+  useEffect(() => {
+    if (roomState?.phase !== 'playing') return;
+    const handCardIds = Array.from(selectedIds).filter(id => hand.some(c => c.id === id));
+    showCards(handCardIds);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIds]);
 
   if (!roomState) return null;
 
@@ -55,19 +63,17 @@ export default function Game() {
   const allSelected = [...selectedHandCards, ...selectedTableCards];
   const handResult = allSelected.length >= 1 ? evaluateBestHand(allSelected) : null;
 
-  // ── Discard handler ──────────────────────────────────────────────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const handleDiscard = (cardId: string) => {
     if (isMyTurnToDiscard) discardCard(cardId).catch(console.error);
   };
 
-  // ── Reveal handler ───────────────────────────────────────────────────────
   const handleReveal = (position: number) => {
     if (!isDealer || roomState.phase !== 'playing') return;
     const card = roomState.tableCards[position];
     if (card && !card.faceUp) revealTableCard(position).catch(console.error);
   };
 
-  // ── Table card click ─────────────────────────────────────────────────────
   const handleTableClick = (position: number) => {
     const card = roomState.tableCards[position];
     if (!card) return;
@@ -82,7 +88,6 @@ export default function Game() {
     p => p.socketId === roomState.currentDiscardPlayerId
   );
 
-  // ── Rank colour ──────────────────────────────────────────────────────────
   const rankColor = (rank: number) => {
     if (rank >= 9) return 'text-yellow-300';
     if (rank >= 7) return 'text-amber-400';
@@ -91,12 +96,29 @@ export default function Game() {
     return 'text-muted-foreground';
   };
 
+  // ── Table card helper ─────────────────────────────────────────────────────
+  const TableCard = ({ position }: { position: number }) => {
+    const card = roomState.tableCards[position];
+    if (!card) return <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-lg border border-dashed border-border/30 opacity-20" />;
+    return (
+      <div className="relative group">
+        <PlayingCard
+          card={card}
+          size="table"
+          onClick={() => handleTableClick(position)}
+          highlighted={isDealer && roomState.phase === 'playing' && !card.faceUp}
+          selected={'suit' in card && selectedIds.has(card.id)}
+        />
+      </div>
+    );
+  };
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-dvh flex flex-col bg-background relative overflow-hidden">
 
       {/* Opponents Row */}
-      <div className="pt-4 pb-2 flex justify-center gap-6 px-4 flex-wrap">
+      <div className="pt-3 pb-2 flex justify-center gap-4 px-4 flex-wrap">
         {otherPlayers.map(p => (
           <div
             key={p.socketId}
@@ -104,15 +126,16 @@ export default function Game() {
               'flex flex-col items-center gap-1 transition-all',
               roomState.phase === 'discard' && roomState.currentDiscardPlayerId === p.socketId
                 ? 'scale-110 opacity-100'
-                : 'opacity-70'
+                : 'opacity-80'
             )}
           >
+            {/* Hand silhouette + visible cards */}
             <div className="flex relative items-end">
               {Array.from({ length: p.cardCount }).map((_, i) => {
                 const visible = p.visibleCards?.[i - (p.cardCount - (p.visibleCards?.length ?? 0))];
                 const isVisible = i >= p.cardCount - (p.visibleCards?.length ?? 0) && visible;
                 return isVisible ? (
-                  <div key={i} className={cn('shrink-0', i > 0 && '-ml-4')} style={{ zIndex: i }}>
+                  <div key={i} className={cn('shrink-0', i > 0 && '-ml-3')} style={{ zIndex: i }}>
                     <PlayingCard card={{ ...visible, faceUp: true }} size="sm" />
                   </div>
                 ) : (
@@ -120,118 +143,67 @@ export default function Game() {
                     key={i}
                     className={cn(
                       'w-8 h-12 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
-                      i > 0 && '-ml-4'
+                      i > 0 && '-ml-3'
                     )}
                     style={{ zIndex: i }}
                   />
                 );
               })}
             </div>
+
+            {/* Name badge */}
             <div className="bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-border text-xs flex items-center gap-2 shadow-lg">
               {p.isDealer && <Crown className="w-3 h-3 text-primary" />}
-              <span className="font-serif truncate max-w-[100px]">{p.name}</span>
+              <span className="font-serif truncate max-w-[90px]">{p.name}</span>
               <span className="text-primary font-mono">{p.cardCount}</span>
             </div>
+
+            {/* Carte che l'avversario sta mostrando */}
+            {p.shownCards && p.shownCards.length > 0 && (
+              <div className="flex flex-col items-center gap-1 mt-0.5">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-2 py-0.5 rounded-full">
+                  Mostra
+                </span>
+                <div className="flex gap-1">
+                  {p.shownCards.map(card => (
+                    <PlayingCard
+                      key={card.id}
+                      card={{ ...card, faceUp: true }}
+                      size="sm"
+                      selected
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Table (Cross layout) */}
-      <div className="flex-1 flex items-center justify-center relative p-4">
-        <div className="relative w-full max-w-[380px] aspect-square flex items-center justify-center">
-          {/* Center */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-            {roomState.tableCards[2] && (
-              <div className="relative group">
-                <PlayingCard
-                  card={roomState.tableCards[2]}
-                  size="table"
-                  onClick={() => handleTableClick(2)}
-                  highlighted={isDealer && roomState.phase === 'playing' && !roomState.tableCards[2].faceUp}
-                  selected={selectedIds.has(roomState.tableCards[2].id)}
-                />
-                {!roomState.tableCards[2].faceUp && (
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/80 px-2 rounded">Centro</span>
-                )}
-              </div>
-            )}
-          </div>
+      {/* Table — griglia a croce 3×3 */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div
+          className="grid gap-2 sm:gap-3"
+          style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
+        >
+          {/* Riga 1 */}
+          <div />
+          <TableCard position={0} />
+          <div />
 
-          {/* Top */}
-          <div className="absolute top-[5%] left-1/2 -translate-x-1/2">
-            {roomState.tableCards[0] && (
-              <div className="relative group">
-                <PlayingCard
-                  card={roomState.tableCards[0]}
-                  size="table"
-                  onClick={() => handleTableClick(0)}
-                  highlighted={isDealer && roomState.phase === 'playing' && !roomState.tableCards[0].faceUp}
-                  selected={selectedIds.has(roomState.tableCards[0].id)}
-                />
-                {!roomState.tableCards[0].faceUp && (
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/80 px-2 rounded">Sopra</span>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Riga 2 */}
+          <TableCard position={1} />
+          <TableCard position={2} />
+          <TableCard position={3} />
 
-          {/* Bottom */}
-          <div className="absolute bottom-[5%] left-1/2 -translate-x-1/2">
-            {roomState.tableCards[4] && (
-              <div className="relative group">
-                <PlayingCard
-                  card={roomState.tableCards[4]}
-                  size="table"
-                  onClick={() => handleTableClick(4)}
-                  highlighted={isDealer && roomState.phase === 'playing' && !roomState.tableCards[4].faceUp}
-                  selected={selectedIds.has(roomState.tableCards[4].id)}
-                />
-                {!roomState.tableCards[4].faceUp && (
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/80 px-2 rounded">Sotto</span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Left */}
-          <div className="absolute top-1/2 left-[5%] -translate-y-1/2">
-            {roomState.tableCards[1] && (
-              <div className="relative group">
-                <PlayingCard
-                  card={roomState.tableCards[1]}
-                  size="table"
-                  onClick={() => handleTableClick(1)}
-                  highlighted={isDealer && roomState.phase === 'playing' && !roomState.tableCards[1].faceUp}
-                  selected={selectedIds.has(roomState.tableCards[1].id)}
-                />
-                {!roomState.tableCards[1].faceUp && (
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/80 px-2 rounded">Sinistra</span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Right */}
-          <div className="absolute top-1/2 right-[5%] -translate-y-1/2">
-            {roomState.tableCards[3] && (
-              <div className="relative group">
-                <PlayingCard
-                  card={roomState.tableCards[3]}
-                  size="table"
-                  onClick={() => handleTableClick(3)}
-                  highlighted={isDealer && roomState.phase === 'playing' && !roomState.tableCards[3].faceUp}
-                  selected={selectedIds.has(roomState.tableCards[3].id)}
-                />
-                {!roomState.tableCards[3].faceUp && (
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/80 px-2 rounded">Destra</span>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Riga 3 */}
+          <div />
+          <TableCard position={4} />
+          <div />
         </div>
       </div>
 
-      {/* Status / Hand Display Bar */}
+      {/* Status Bar */}
       <div className="min-h-12 bg-black/40 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-4 py-2 gap-4">
         {roomState.phase === 'discard' && (
           <div className="flex items-center gap-2 text-primary text-center">
@@ -290,10 +262,9 @@ export default function Game() {
           </div>
         )}
 
-        {/* Cards layout: hidden fan + revealed card separated */}
         <div className="flex items-end justify-center gap-10 px-4 max-w-4xl mx-auto flex-wrap">
 
-          {/* Fan di carte coperte */}
+          {/* Fan carte coperte */}
           {hiddenCards.length > 0 && (
             <div className="flex justify-center">
               {hiddenCards.map((card, i) => (
@@ -323,7 +294,7 @@ export default function Game() {
             </div>
           )}
 
-          {/* Carta scoperta — separata e ben identificata */}
+          {/* Carta scoperta isolata */}
           {revealedCards.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/40 px-3 py-0.5 rounded-full bg-primary/10 whitespace-nowrap">
@@ -339,7 +310,6 @@ export default function Game() {
                       !selectedIds.has(card.id) && 'hover:-translate-y-4',
                       selectedIds.has(card.id) && '-translate-y-8',
                     )}
-                    style={{ zIndex: selectedIds.has(card.id) ? 30 : 1 }}
                   >
                     <PlayingCard
                       card={{ ...card, faceUp: true }}
@@ -357,7 +327,7 @@ export default function Game() {
             </div>
           )}
 
-          {/* Caso: tutte le carte in mano sono scoperte (Modalità 2 iniziale) */}
+          {/* Fallback: tutte le carte non classificate */}
           {hiddenCards.length === 0 && revealedCards.length === 0 && hand.length > 0 && (
             <div className="flex justify-center">
               {hand.map((card, i) => (

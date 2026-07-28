@@ -18,6 +18,7 @@ export interface PlayerView {
   isFirstPlayer: boolean;
   cardCount: number;
   visibleCards: Card[];
+  shownCards: Card[];
 }
 
 export interface RoomState {
@@ -45,6 +46,7 @@ interface GameContextState {
   startGame: (mode: 1 | 2) => Promise<void>;
   revealTableCard: (position: number) => Promise<void>;
   discardCard: (cardId: string) => Promise<void>;
+  showCards: (cardIds: string[]) => void;
   leaveRoom: () => void;
 }
 
@@ -147,6 +149,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
     });
 
+  const showCards = (cardIds: string[]) => {
+    if (!socket) return;
+    socket.emit('show_cards', { cardIds });
+  };
+
   const leaveRoom = () => {
     if (socket) {
       socket.disconnect();
@@ -162,7 +169,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     <GameContext.Provider value={{
       socket, playerName, roomState, hand, isConnected, error, roomPassword, pendingRoomCode,
       setPlayerName: handleSetPlayerName,
-      createRoom, joinRoom, startGame, revealTableCard, discardCard, leaveRoom
+      createRoom, joinRoom, startGame, revealTableCard, discardCard, showCards, leaveRoom
     }}>
       {children}
     </GameContext.Provider>
