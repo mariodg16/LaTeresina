@@ -180,27 +180,43 @@ export default function Game() {
         ))}
       </div>
 
-      {/* Table — griglia a croce 3×3 */}
+      {/* Table */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div
-          className="grid gap-2 sm:gap-3"
-          style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
-        >
-          {/* Riga 1 */}
-          <div />
-          <TableCard position={0} />
-          <div />
+        {roomState.gameMode === 3 ? (
+          /* Ascensore: carta in alto + 3 laterali */
+          <div className="flex flex-col items-center gap-2 sm:gap-3">
+            {/* Label modalità */}
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70 mb-1">
+              Ascensore
+            </span>
+            {/* Carta centrale alta */}
+            <TableCard position={0} />
+            {/* 3 carte laterali */}
+            <div className="flex gap-2 sm:gap-3">
+              <TableCard position={1} />
+              <TableCard position={2} />
+              <TableCard position={3} />
+            </div>
+          </div>
+        ) : (
+          /* Croce 3×3 — Modalità 1 e 2 */
+          <div
+            className="grid gap-2 sm:gap-3"
+            style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
+          >
+            <div />
+            <TableCard position={0} />
+            <div />
 
-          {/* Riga 2 */}
-          <TableCard position={1} />
-          <TableCard position={2} />
-          <TableCard position={3} />
+            <TableCard position={1} />
+            <TableCard position={2} />
+            <TableCard position={3} />
 
-          {/* Riga 3 */}
-          <div />
-          <TableCard position={4} />
-          <div />
-        </div>
+            <div />
+            <TableCard position={4} />
+            <div />
+          </div>
+        )}
       </div>
 
       {/* Status Bar */}

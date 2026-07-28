@@ -114,13 +114,28 @@ export function removePlayer(socketId: string): Room | null {
 }
 
 /** Deal cards for the chosen game mode */
-export function dealCards(room: Room, mode: 1 | 2): boolean {
+export function dealCards(room: Room, mode: 1 | 2 | 3): boolean {
   if (room.players.length < 2) return false;
 
   const deck = shuffle(createDeck());
   let idx = 0;
 
-  // Deal 5 table cards face-down (cross pattern)
+  if (mode === 3) {
+    // Ascensore: 4 carte a terra (centro-alto, sinistra, centro-basso, destra), tutte coperte
+    room.tableCards = Array.from({ length: 4 }, () => ({ ...deck[idx++], faceUp: false }));
+    // Stesso trattamento carte della Modalità 1: 4 coperte + 1 scoperta
+    for (const player of room.players) {
+      const hand: Card[] = [];
+      for (let i = 0; i < 4; i++) hand.push({ ...deck[idx++], faceUp: false });
+      hand.push({ ...deck[idx++], faceUp: true });
+      player.hand = hand;
+    }
+    room.gameMode = 3;
+    room.phase = "playing";
+    return true;
+  }
+
+  // Deal 5 table cards face-down (cross pattern) — Mod 1 e 2
   room.tableCards = Array.from({ length: 5 }, () => {
     const c = { ...deck[idx++], faceUp: false };
     return c;
@@ -164,9 +179,9 @@ export function dealCards(room: Room, mode: 1 | 2): boolean {
   return true;
 }
 
-/** Reveal a table card by position index (0–4) */
+/** Reveal a table card by position index (0–4 for mode 1/2, 0–3 for mode 3) */
 export function revealTableCard(room: Room, position: number): boolean {
-  if (position < 0 || position > 4) return false;
+  if (position < 0 || position >= room.tableCards.length) return false;
   const card = room.tableCards[position];
   if (!card || card.faceUp) return false;
   card.faceUp = true;

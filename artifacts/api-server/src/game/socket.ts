@@ -72,7 +72,7 @@ export function setupSocketIO(io: Server) {
     // ── Start game (dealer only) ─────────────────────────────────────────────
     socket.on(
       "start_game",
-      (data: { mode: 1 | 2 }, callback: (res: object) => void) => {
+      (data: { mode: 1 | 2 | 3 }, callback: (res: object) => void) => {
         try {
           const room = getRoomBySocket(socket.id);
           if (!room) { callback({ ok: false, error: "Stanza non trovata" }); return; }

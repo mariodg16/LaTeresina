@@ -151,13 +151,13 @@ export default function Lobby() {
 
         {/* Azioni mazziere / attesa */}
         {isDealer ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Button
               className="w-full h-14 text-lg bg-primary text-primary-foreground"
               disabled={!canStart}
               onClick={() => startGame(1).catch(() => {})}
             >
-              Inizia Partita (Modalità 1)
+              Modalità 1 — Croce
             </Button>
             <Button
               variant="outline"
@@ -165,7 +165,15 @@ export default function Lobby() {
               disabled={!canStart}
               onClick={() => startGame(2).catch(() => {})}
             >
-              Inizia Partita (Modalità 2 – Scarto)
+              Modalità 2 — Scarto
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-14 text-lg border-amber-500/60 text-amber-400 hover:bg-amber-500/10"
+              disabled={!canStart}
+              onClick={() => startGame(3).catch(() => {})}
+            >
+              Modalità 3 — Ascensore
             </Button>
             {!canStart && (
               <p className="text-center text-sm text-muted-foreground">

@@ -24,7 +24,7 @@ export interface PlayerView {
 export interface RoomState {
   code: string;
   phase: 'lobby' | 'mode_selection' | 'discard' | 'playing';
-  gameMode: 1 | 2 | null;
+  gameMode: 1 | 2 | 3 | null;
   players: PlayerView[];
   tableCards: (Card | { id: string; faceUp: false } | null)[];
   currentDiscardPlayerId: string | null;
@@ -43,7 +43,7 @@ interface GameContextState {
   setPlayerName: (name: string) => void;
   createRoom: (name: string, password: string) => Promise<string>;
   joinRoom: (code: string, name: string, password: string) => Promise<string>;
-  startGame: (mode: 1 | 2) => Promise<void>;
+  startGame: (mode: 1 | 2 | 3) => Promise<void>;
   revealTableCard: (position: number) => Promise<void>;
   discardCard: (cardId: string) => Promise<void>;
   showCards: (cardIds: string[]) => void;
@@ -123,7 +123,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
     });
 
-  const startGame = (mode: 1 | 2): Promise<void> =>
+  const startGame = (mode: 1 | 2 | 3): Promise<void> =>
     new Promise((resolve, reject) => {
       if (!socket) return reject('Socket non connesso');
       socket.emit('start_game', { mode }, (res: { ok: boolean; error?: string }) => {
