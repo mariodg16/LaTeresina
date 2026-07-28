@@ -121,17 +121,28 @@ export function dealCards(room: Room, mode: 1 | 2 | 3): boolean {
   let idx = 0;
 
   if (mode === 3) {
-    // Ascensore: 4 carte a terra (centro-alto, sinistra, centro-basso, destra), tutte coperte
-    room.tableCards = Array.from({ length: 4 }, () => ({ ...deck[idx++], faceUp: false }));
-    // Stesso trattamento carte della Modalità 1: 4 coperte + 1 scoperta
-    for (const player of room.players) {
+    // Ascensore: 7 carte a terra tutte coperte
+    // Posizioni: 0=centro, 1=sinistra-alto, 2=sinistra-medio, 3=sinistra-basso,
+    //            4=destra-alto, 5=destra-medio, 6=destra-basso
+    room.tableCards = Array.from({ length: 7 }, () => ({ ...deck[idx++], faceUp: false }));
+    // Fase di scarto come Modalità 2: chi sta di mano riceve 6 carte, gli altri 5
+    for (let i = 0; i < room.players.length; i++) {
+      const count = room.players[i].isFirstPlayer ? 6 : 5;
       const hand: Card[] = [];
-      for (let i = 0; i < 4; i++) hand.push({ ...deck[idx++], faceUp: false });
-      hand.push({ ...deck[idx++], faceUp: true });
-      player.hand = hand;
+      for (let j = 0; j < count; j++) hand.push({ ...deck[idx++], faceUp: false });
+      room.players[i].hand = hand;
     }
     room.gameMode = 3;
-    room.phase = "playing";
+    // Coda scarto: chi sta di mano poi in senso antiorario
+    const firstIdx = room.players.findIndex((p) => p.isFirstPlayer);
+    const n = room.players.length;
+    const orderedIds: string[] = [];
+    for (let i = 0; i < n; i++) {
+      orderedIds.push(room.players[(firstIdx - i + n) % n].socketId);
+    }
+    room.discardQueue = orderedIds;
+    room.currentDiscardIndex = 0;
+    room.phase = "discard";
     return true;
   }
 

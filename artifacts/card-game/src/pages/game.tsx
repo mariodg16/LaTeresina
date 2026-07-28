@@ -29,20 +29,9 @@ export default function Game() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds]);
 
-  if (!roomState) return null;
+  // ── Tutte le callback/hook prima del guard ───────────────────────────────
+  const canSelect = roomState?.phase === 'playing';
 
-  const me = roomState.players.find(p => p.name === playerName);
-  const isDealer = me?.isDealer ?? false;
-  const isMyTurnToDiscard =
-    roomState.phase === 'discard' && roomState.currentDiscardPlayerId === me?.socketId;
-  const otherPlayers = roomState.players.filter(p => p.name !== playerName);
-  const canSelect = roomState.phase === 'playing';
-
-  // ── Split mano: coperte vs scoperta ─────────────────────────────────────
-  const hiddenCards = hand.filter(c => !c.faceUp);
-  const revealedCards = hand.filter(c => c.faceUp);
-
-  // ── Selection helpers ────────────────────────────────────────────────────
   const toggleCard = useCallback((id: string) => {
     if (!canSelect) return;
     setSelectedIds(prev => {
@@ -52,6 +41,18 @@ export default function Game() {
       return next;
     });
   }, [canSelect]);
+
+  if (!roomState) return null;
+
+  const me = roomState.players.find(p => p.name === playerName);
+  const isDealer = me?.isDealer ?? false;
+  const isMyTurnToDiscard =
+    roomState.phase === 'discard' && roomState.currentDiscardPlayerId === me?.socketId;
+  const otherPlayers = roomState.players.filter(p => p.name !== playerName);
+
+  // ── Split mano: coperte vs scoperta ─────────────────────────────────────
+  const hiddenCards = hand.filter(c => !c.faceUp);
+  const revealedCards = hand.filter(c => c.faceUp);
 
   const clearSelection = () => setSelectedIds(new Set());
 
@@ -183,19 +184,27 @@ export default function Game() {
       {/* Table */}
       <div className="flex-1 flex items-center justify-center p-4">
         {roomState.gameMode === 3 ? (
-          /* Ascensore: carta in alto + 3 laterali */
-          <div className="flex flex-col items-center gap-2 sm:gap-3">
-            {/* Label modalità */}
+          /* Ascensore: 3 sx  |  centro  |  3 dx  — griglia 3×3 */
+          <div className="flex flex-col items-center gap-1 sm:gap-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70 mb-1">
               Ascensore
             </span>
-            {/* Carta centrale alta */}
-            <TableCard position={0} />
-            {/* 3 carte laterali */}
-            <div className="flex gap-2 sm:gap-3">
+            <div
+              className="grid gap-1.5 sm:gap-2"
+              style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
+            >
+              {/* riga 1 */}
               <TableCard position={1} />
+              <div />
+              <TableCard position={4} />
+              {/* riga 2 — centro */}
               <TableCard position={2} />
+              <TableCard position={0} />
+              <TableCard position={5} />
+              {/* riga 3 */}
               <TableCard position={3} />
+              <div />
+              <TableCard position={6} />
             </div>
           </div>
         ) : (
