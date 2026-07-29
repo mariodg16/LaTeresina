@@ -63,7 +63,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [pendingRoomCode, setPendingRoomCode] = useState<string | null>(null);
 
   useEffect(() => {
-    const newSocket = io({ path: '/socket.io' });
+    const newSocket = io(import.meta.env.VITE_API_URL || undefined, { path: '/socket.io' });
     setSocket(newSocket);
 
     newSocket.on('connect', () => setIsConnected(true));
