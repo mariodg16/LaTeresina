@@ -97,7 +97,7 @@ export default function Game() {
     return 'text-muted-foreground';
   };
 
-  // ── Table card helper ─────────────────────────────────────────────────────
+  // ── Table card helper ────────────────────────────────────────────────     const TableCard = ({ position }: { position: number }) => {
   const TableCard = ({ position }: { position: number }) => {
     const card = roomState.tableCards[position];
     if (!card) return <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-lg border border-dashed border-border/30 opacity-20" />;
@@ -116,17 +116,17 @@ export default function Game() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-dvh flex flex-col bg-background relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
 
       {/* Opponents Row */}
-      <div className="pt-3 pb-2 flex justify-center gap-4 px-4 flex-wrap">
+      <div className="py-2 flex justify-center gap-2 sm:gap-4 px-2 flex-wrap shrink-0">
         {otherPlayers.map(p => (
           <div
             key={p.socketId}
             className={cn(
-              'flex flex-col items-center gap-1 transition-all',
+              'flex flex-col items-center gap-0.5 transition-all scale-90 sm:scale-100',
               roomState.phase === 'discard' && roomState.currentDiscardPlayerId === p.socketId
-                ? 'scale-110 opacity-100'
+                ? 'scale-105 opacity-100'
                 : 'opacity-80'
             )}
           >
@@ -143,7 +143,7 @@ export default function Game() {
                   <div
                     key={i}
                     className={cn(
-                      'w-8 h-12 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
+                      'w-6 h-9 sm:w-8 sm:h-12 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
                       i > 0 && '-ml-3'
                     )}
                     style={{ zIndex: i }}
@@ -153,16 +153,16 @@ export default function Game() {
             </div>
 
             {/* Name badge */}
-            <div className="bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-border text-xs flex items-center gap-2 shadow-lg">
-              {p.isDealer && <Crown className="w-3 h-3 text-primary" />}
-              <span className="font-serif truncate max-w-[90px]">{p.name}</span>
+            <div className="bg-card/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border text-[10px] sm:text-xs flex items-center gap-1.5 shadow-lg">
+              {p.isDealer && <Crown className="w-2.5 h-2.5 text-primary" />}
+              <span className="font-serif truncate max-w-[70px] sm:max-w-[90px]">{p.name}</span>
               <span className="text-primary font-mono">{p.cardCount}</span>
             </div>
 
             {/* Carte che l'avversario sta mostrando */}
             {p.shownCards && p.shownCards.length > 0 && (
-              <div className="flex flex-col items-center gap-1 mt-0.5">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-2 py-0.5 rounded-full">
+              <div className="flex flex-col items-center gap-0.5 mt-0.5">
+                <span className="text-[8px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-1.5 py-0.2 rounded-full">
                   Mostra
                 </span>
                 <div className="flex gap-1">
@@ -182,15 +182,15 @@ export default function Game() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
         {roomState.gameMode === 3 ? (
           /* Ascensore: 3 sx  |  centro  |  3 dx  — griglia 3×3 */
-          <div className="flex flex-col items-center gap-1 sm:gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70 mb-1">
+          <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70 mb-0.5">
               Ascensore
             </span>
             <div
-              className="grid gap-1.5 sm:gap-2"
+              className="grid gap-1 sm:gap-2"
               style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
             >
               {/* riga 1 */}
@@ -210,7 +210,7 @@ export default function Game() {
         ) : (
           /* Croce 3×3 — Modalità 1 e 2 */
           <div
-            className="grid gap-2 sm:gap-3"
+            className="grid gap-1.5 sm:gap-3 scale-90 sm:scale-100"
             style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
           >
             <div />
@@ -229,15 +229,15 @@ export default function Game() {
       </div>
 
       {/* Status Bar */}
-      <div className="min-h-12 bg-black/40 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-4 py-2 gap-4">
+      <div className="h-10 sm:h-12 bg-black/40 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 py-1 gap-2 shrink-0">
         {roomState.phase === 'discard' && (
           <div className="flex items-center gap-2 text-primary text-center">
             {isMyTurnToDiscard ? (
-              <span className="font-serif animate-pulse font-bold tracking-wide text-sm">
-                È IL TUO TURNO — Seleziona una carta da passare in senso antiorario
+              <span className="font-serif animate-pulse font-bold tracking-wide text-xs sm:text-sm">
+                È IL TUO TURNO — Seleziona una carta da passare
               </span>
             ) : (
-              <span className="font-serif text-muted-foreground text-sm">
+              <span className="font-serif text-muted-foreground text-xs sm:text-sm">
                 Fase di scarto — In attesa di {currentDiscardPlayer?.name}...
               </span>
             )}
@@ -245,19 +245,19 @@ export default function Game() {
         )}
 
         {roomState.phase === 'playing' && !handResult && (
-          <span className="font-serif text-muted-foreground tracking-wide text-sm text-center">
+          <span className="font-serif text-muted-foreground tracking-wide text-xs sm:text-sm text-center">
             {isDealer
-              ? 'Sei il Mazziere — clicca le carte al centro per rivelarle.'
+              ? 'Sei il Mazziere — clicca le carte al centro.'
               : 'Seleziona le carte per mostrare il tuo punto.'}
           </span>
         )}
 
         {roomState.phase === 'playing' && handResult && (
-          <div className="flex items-center gap-3">
-            <span className={cn('font-serif font-bold text-lg tracking-wide', rankColor(handResult.rank))}>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className={cn('font-serif font-bold text-base sm:text-lg tracking-wide', rankColor(handResult.rank))}>
               {handResult.name}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
               ({allSelected.length} {allSelected.length === 1 ? 'carta' : 'carte'})
             </span>
             <button
@@ -272,34 +272,34 @@ export default function Game() {
 
       {/* Hand Area */}
       <div className={cn(
-        'bg-card/30 border-t border-border pt-8 pb-12 relative',
+        'bg-card/30 border-t border-border pt-6 pb-6 sm:pb-8 relative shrink-0',
         isMyTurnToDiscard && 'bg-primary/5 border-primary/20'
       )}>
         {/* Player name badge */}
-        <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-4 py-1 rounded-full shadow-lg flex items-center gap-2 z-10">
-          {me?.isDealer && <Crown className="w-4 h-4 text-primary" />}
+        <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 z-10 text-xs">
+          {me?.isDealer && <Crown className="w-3.5 h-3.5 text-primary" />}
           <span className="font-serif font-medium">{playerName}</span>
         </div>
 
         {canSelect && (
-          <div className="absolute top-0 right-4 -translate-y-1/2 bg-card/80 border border-border px-3 py-1 rounded-full text-xs text-muted-foreground">
+          <div className="absolute top-0 right-4 -translate-y-1/2 bg-card/80 border border-border px-2.5 py-0.5 rounded-full text-[10px] text-muted-foreground">
             Clicca per selezionare
           </div>
         )}
 
-        <div className="flex items-end justify-center gap-10 px-4 max-w-4xl mx-auto flex-wrap">
+        <div className="flex items-end justify-center gap-6 sm:gap-10 px-2 max-w-4xl mx-auto flex-wrap">
 
           {/* Fan carte coperte */}
           {hiddenCards.length > 0 && (
-            <div className="flex justify-center">
+            <div className="flex justify-center scale-90 sm:scale-100 origin-bottom">
               {hiddenCards.map((card, i) => (
                 <div
                   key={card.id}
                   className={cn(
                     'transition-all duration-300 hover:z-20',
                     (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
-                    !selectedIds.has(card.id) && 'hover:-translate-y-4',
-                    selectedIds.has(card.id) && '-translate-y-8',
+                    !selectedIds.has(card.id) && 'hover:-translate-y-3',
+                    selectedIds.has(card.id) && '-translate-y-6',
                     i > 0 && '-ml-6 sm:-ml-4'
                   )}
                   style={{ zIndex: selectedIds.has(card.id) ? 30 : i }}
@@ -321,8 +321,8 @@ export default function Game() {
 
           {/* Carta scoperta isolata */}
           {revealedCards.length > 0 && (
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/40 px-3 py-0.5 rounded-full bg-primary/10 whitespace-nowrap">
+            <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100 origin-bottom">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-primary border border-primary/40 px-2 py-0.2 rounded-full bg-primary/10 whitespace-nowrap">
                 Carta Scoperta
               </span>
               <div className="flex gap-2">
@@ -332,8 +332,8 @@ export default function Game() {
                     className={cn(
                       'transition-all duration-300',
                       (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
-                      !selectedIds.has(card.id) && 'hover:-translate-y-4',
-                      selectedIds.has(card.id) && '-translate-y-8',
+                      !selectedIds.has(card.id) && 'hover:-translate-y-3',
+                      selectedIds.has(card.id) && '-translate-y-6',
                     )}
                   >
                     <PlayingCard
@@ -354,15 +354,15 @@ export default function Game() {
 
           {/* Fallback: tutte le carte non classificate */}
           {hiddenCards.length === 0 && revealedCards.length === 0 && hand.length > 0 && (
-            <div className="flex justify-center">
+            <div className="flex justify-center scale-90 sm:scale-100 origin-bottom">
               {hand.map((card, i) => (
                 <div
                   key={card.id}
                   className={cn(
                     'transition-all duration-300 hover:z-20',
                     (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
-                    !selectedIds.has(card.id) && 'hover:-translate-y-4',
-                    selectedIds.has(card.id) && '-translate-y-8',
+                    !selectedIds.has(card.id) && 'hover:-translate-y-3',
+                    selectedIds.has(card.id) && '-translate-y-6',
                     i > 0 && '-ml-6 sm:-ml-4'
                   )}
                   style={{ zIndex: selectedIds.has(card.id) ? 30 : i }}
