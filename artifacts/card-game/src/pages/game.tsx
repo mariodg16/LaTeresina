@@ -11,11 +11,8 @@ export default function Game() {
   const { roomState, playerName, hand, discardCard, revealTableCard, showCards, startGame } = useGame();
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
-  // Stato locale per ricordare l'ultima modalità scelta (default 1)
   const [selectedMode, setSelectedMode] = useState<number>(1);
 
-  // Aggiorna la modalità scelta se la stanza ne ha già una attiva
   useEffect(() => {
     if (roomState?.gameMode) {
       setSelectedMode(roomState.gameMode);
@@ -125,6 +122,16 @@ export default function Game() {
     }
   };
 
+  // Funzione protetta per testare la distribuzione con log in console
+  const handleTriggerStart = () => {
+    console.log("Tentativo di avvio/distribuzione con modalità:", selectedMode);
+    if (typeof startGame === 'function') {
+      startGame(selectedMode);
+    } else {
+      console.error("startGame non è una funzione disponibile nel context!");
+    }
+  };
+
   const currentDiscardPlayer = players.find(
     p => p.socketId === roomState.currentDiscardPlayerId
   );
@@ -158,7 +165,7 @@ export default function Game() {
 
       {/* Pulsante fluttuante e selettore modalità per il mazziere */}
       {isDealer && (
-        <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5 bg-card/90 border border-border p-1.5 rounded-lg shadow-lg backdrop-blur-md">
+        <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5 bg-card/90 border border-border p-1.5 rounded-lg shadow-xl backdrop-blur-md">
           <select 
             value={selectedMode} 
             onChange={(e) => setSelectedMode(Number(e.target.value))}
@@ -169,8 +176,9 @@ export default function Game() {
             <option value={3}>Ascensore</option>
           </select>
           <button
-            onClick={() => startGame(selectedMode)}
-            className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold rounded shadow flex items-center gap-1 cursor-pointer transition-all"
+            type="button"
+            onClick={handleTriggerStart}
+            className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold rounded shadow flex items-center gap-1 cursor-pointer transition-all active:scale-95"
             title="Distribuisci carte"
           >
             <RotateCcw className="w-3 h-3" /> Distribuisci
