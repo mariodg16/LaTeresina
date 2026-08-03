@@ -13,15 +13,18 @@ export default function Game() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!roomState) setLocation('/');
+    if (!roomState) {
+      const timer = setTimeout(() => {
+        setLocation('/');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
   }, [roomState, setLocation]);
 
-  // Reset selection when phase changes
   useEffect(() => {
     setSelectedIds(new Set());
   }, [roomState?.phase]);
 
-  // Broadcast selected hand cards to opponents whenever selection changes
   useEffect(() => {
     if (roomState?.phase !== 'playing') return;
     const handCardIds = Array.from(selectedIds).filter(id => hand.some(c => c.id === id));
@@ -126,7 +129,7 @@ export default function Game() {
 
   const TableCard = ({ position }: { position: number }) => {
     const card = roomState.tableCards[position];
-    if (!card) return <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-lg border border-dashed border-border/30 opacity-20" />;
+    if (!card) return <div className="w-16 h-24 sm:w-20 sm:h-30 rounded-lg border border-dashed border-border/30 opacity-20" />;
     return (
       <div className="relative group">
         <PlayingCard
@@ -141,15 +144,14 @@ export default function Game() {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden select-none">
 
-      {/* Pulsante fluttuante sempre visibile per il mazziere per distribuire/rigiocare */}
+      {/* Pulsante fluttuante sempre visibile per il mazziere */}
       {isDealer && (
-        <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-card/90 border border-border p-1.5 rounded-xl shadow-xl backdrop-blur-md">
-          <span className="text-[10px] text-muted-foreground hidden sm:inline px-1">Mazziere:</span>
+        <div className="absolute top-2 right-2 z-30 flex items-center gap-1 bg-card/90 border border-border p-1 rounded-lg shadow-lg backdrop-blur-md">
           <button
             onClick={() => startGame(roomState.gameMode || 1)}
-            className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg shadow flex items-center gap-1 cursor-pointer transition-all"
+            className="px-2 py-0.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold rounded shadow flex items-center gap-1 cursor-pointer transition-all"
             title="Ridistribuisci carte"
           >
             <RotateCcw className="w-3 h-3" /> Distribuisci
@@ -157,8 +159,8 @@ export default function Game() {
         </div>
       )}
 
-      {/* Opponents Row */}
-      <div className="py-2 flex justify-center gap-2 sm:gap-4 px-2 flex-wrap shrink-0">
+      {/* Opponents Row - Compatta per non tagliare nulla in alto */}
+      <div className="pt-1.5 pb-1 flex justify-center gap-2 sm:gap-4 px-2 flex-wrap shrink-0">
         {otherPlayers.map(p => {
           const pIndex = players.findIndex(item => item.socketId === p.socketId);
           const isRightOfDealer = pIndex === rightOfDealerIndex;
@@ -167,9 +169,9 @@ export default function Game() {
             <div
               key={p.socketId}
               className={cn(
-                'flex flex-col items-center gap-0.5 transition-all scale-90 sm:scale-100',
+                'flex flex-col items-center gap-0.5 transition-all scale-85 sm:scale-95',
                 roomState.phase === 'discard' && roomState.currentDiscardPlayerId === p.socketId
-                  ? 'scale-105 opacity-100'
+                  ? 'scale-100 opacity-100'
                   : 'opacity-80'
               )}
             >
@@ -185,8 +187,8 @@ export default function Game() {
                     <div
                       key={i}
                       className={cn(
-                        'w-6 h-9 sm:w-8 sm:h-12 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
-                        i > 0 && '-ml-3'
+                        'w-5 h-8 sm:w-7 sm:h-10 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
+                        i > 0 && '-ml-2.5'
                       )}
                       style={{ zIndex: i }}
                     />
@@ -194,7 +196,7 @@ export default function Game() {
                 })}
               </div>
 
-              <div className="bg-card/90 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border text-[10px] sm:text-xs flex items-center gap-1 shadow-lg whitespace-nowrap">
+              <div className="bg-card/90 backdrop-blur-sm px-2 py-0.2 rounded-full border border-border text-[10px] flex items-center gap-1 shadow-md whitespace-nowrap">
                 <span className="font-mono text-primary font-bold">#{pIndex + 1}</span>
                 {p.isDealer && <Crown className="w-2.5 h-2.5 text-primary shrink-0" />}
                 <span className="font-serif truncate max-w-[60px] sm:max-w-[80px]">{p.name}</span>
@@ -202,14 +204,14 @@ export default function Game() {
               </div>
 
               {isRightOfDealer && (
-                <span className="text-[7px] sm:text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold whitespace-nowrap">
+                <span className="text-[7px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.1 rounded-full uppercase tracking-wider font-semibold whitespace-nowrap">
                   1° di mano
                 </span>
               )}
 
               {p.shownCards && p.shownCards.length > 0 && (
                 <div className="flex flex-col items-center gap-0.5 mt-0.5">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-1.5 py-0.2 rounded-full">
+                  <span className="text-[7px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-1 py-0.1 rounded-full">
                     Mostra
                   </span>
                   <div className="flex gap-1">
@@ -229,15 +231,15 @@ export default function Game() {
         })}
       </div>
 
-      {/* Table */}
-      <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
+      {/* Table - Spazio centrale ottimizzato */}
+      <div className="flex-1 flex items-center justify-center p-1 overflow-hidden">
         {roomState.gameMode === 3 ? (
-          <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70 mb-0.5">
+          <div className="flex flex-col items-center gap-0.5 scale-85 sm:scale-95">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/70 mb-0.5">
               Ascensore
             </span>
             <div
-              className="grid gap-1 sm:gap-2"
+              className="grid gap-1 sm:gap-1.5"
               style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
             >
               <TableCard position={1} />
@@ -253,7 +255,7 @@ export default function Game() {
           </div>
         ) : (
           <div
-            className="grid gap-1.5 sm:gap-3 scale-90 sm:scale-100"
+            className="grid gap-1 sm:gap-2 scale-85 sm:scale-95"
             style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
           >
             <div />
@@ -269,8 +271,8 @@ export default function Game() {
         )}
       </div>
 
-      {/* Status Bar - Flessibile per evitare tagli di testo */}
-      <div className="py-2 sm:py-3 bg-black/60 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-4 shrink-0">
+      {/* Status Bar */}
+      <div className="py-2 bg-black/60 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 shrink-0">
         {roomState.phase === 'lobby' || roomState.phase === 'mode_selection' ? (
           <div className="flex flex-col items-center gap-2 w-full">
             {isDealer ? (
@@ -289,7 +291,7 @@ export default function Game() {
                 </button>
               </div>
             ) : (
-              <span className="font-serif text-muted-foreground text-xs sm:text-sm text-center animate-pulse">
+              <span className="font-serif text-muted-foreground text-xs text-center animate-pulse">
                 In attesa che il mazziere distribuisca le carte...
               </span>
             )}
@@ -297,18 +299,18 @@ export default function Game() {
         ) : roomState.phase === 'discard' ? (
           <div className="text-center px-2">
             {isMyTurnToDiscard ? (
-              <span className="font-serif animate-pulse font-bold text-primary text-xs sm:text-sm block">
+              <span className="font-serif animate-pulse font-bold text-primary text-xs block">
                 È IL TUO TURNO — Seleziona una carta da passare
               </span>
             ) : (
-              <span className="font-serif text-muted-foreground text-xs sm:text-sm block">
+              <span className="font-serif text-muted-foreground text-xs block">
                 Fase di scarto — In attesa di {currentDiscardPlayer?.name}...
               </span>
             )}
           </div>
         ) : roomState.phase === 'playing' && !handResult ? (
           <div className="text-center px-2">
-            <span className="font-serif text-muted-foreground text-xs sm:text-sm block leading-relaxed">
+            <span className="font-serif text-muted-foreground text-xs block leading-relaxed">
               {isDealer
                 ? 'Sei il Mazziere — clicca le carte al centro.'
                 : !tableValid 
@@ -318,10 +320,10 @@ export default function Game() {
           </div>
         ) : roomState.phase === 'playing' && handResult ? (
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center text-center">
-            <span className={cn('font-serif font-bold text-sm sm:text-lg tracking-wide', rankColor(handResult.rank))}>
+            <span className={cn('font-serif font-bold text-sm sm:text-base tracking-wide', rankColor(handResult.rank))}>
               {handResult.name}
             </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground">
               ({allSelected.length} {allSelected.length === 1 ? 'carta' : 'carte'})
             </span>
             <button
@@ -336,23 +338,23 @@ export default function Game() {
 
       {/* Hand Area */}
       <div className={cn(
-        'bg-card/30 border-t border-border pt-5 pb-6 sm:pb-8 relative shrink-0',
+        'bg-card/30 border-t border-border pt-4 pb-5 relative shrink-0',
         isMyTurnToDiscard && 'bg-primary/5 border-primary/20'
       )}>
         <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 z-10 text-xs whitespace-nowrap">
           <span className="font-mono text-primary font-bold">#{myIndex !== -1 ? myIndex + 1 : 1}</span>
-          {me?.isDealer && <Crown className="w-3.5 h-3.5 text-primary shrink-0" />}
+          {me?.isDealer && <Crown className="w-3 h-3 text-primary shrink-0" />}
           <span className="font-serif font-medium truncate max-w-[100px] sm:max-w-[140px]">{playerName}</span>
           {myIndex === rightOfDealerIndex && (
-            <span className="text-[8px] sm:text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold ml-1">
+            <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.1 rounded-full uppercase tracking-wider font-semibold ml-1">
               1° di mano
             </span>
           )}
         </div>
 
-        <div className="flex items-end justify-center gap-6 sm:gap-10 px-2 max-w-4xl mx-auto flex-wrap">
+        <div className="flex items-end justify-center gap-4 sm:gap-8 px-2 max-w-4xl mx-auto flex-wrap">
           {hiddenCards.length > 0 && (
-            <div className="flex justify-center scale-90 sm:scale-100 origin-bottom">
+            <div className="flex justify-center scale-85 sm:scale-95 origin-bottom">
               {hiddenCards.map((card, i) => (
                 <div
                   key={card.id}
@@ -360,8 +362,8 @@ export default function Game() {
                     'transition-all duration-150 hover:z-20',
                     (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
                     !selectedIds.has(card.id) && 'hover:-translate-y-3',
-                    selectedIds.has(card.id) && '-translate-y-6',
-                    i > 0 && '-ml-6 sm:-ml-4'
+                    selectedIds.has(card.id) && '-translate-y-5',
+                    i > 0 && '-ml-5 sm:-ml-3'
                   )}
                   style={{ zIndex: selectedIds.has(card.id) ? 30 : i }}
                 >
@@ -381,8 +383,8 @@ export default function Game() {
           )}
 
           {revealedCards.length > 0 && (
-            <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100 origin-bottom">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-primary border border-primary/40 px-2 py-0.2 rounded-full bg-primary/10 whitespace-nowrap">
+            <div className="flex flex-col items-center gap-1 scale-85 sm:scale-95 origin-bottom">
+              <span className="text-[8px] font-bold uppercase tracking-widest text-primary border border-primary/40 px-2 py-0.1 rounded-full bg-primary/10 whitespace-nowrap">
                 Carta Scoperta
               </span>
               <div className="flex gap-2">
@@ -393,7 +395,7 @@ export default function Game() {
                       'transition-all duration-150',
                       (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
                       !selectedIds.has(card.id) && 'hover:-translate-y-3',
-                      selectedIds.has(card.id) && '-translate-y-6',
+                      selectedIds.has(card.id) && '-translate-y-5',
                     )}
                   >
                     <PlayingCard
