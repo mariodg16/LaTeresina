@@ -8,7 +8,7 @@ import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Game() {
-  const { roomState, playerName, hand, discardCard, revealTableCard, showCards } = useGame();
+  const { roomState, playerName, hand, discardCard, revealTableCard, showCards, selectGameMode } = useGame();
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -97,7 +97,7 @@ export default function Game() {
     return 'text-muted-foreground';
   };
 
-  // ── Table card helper ────────────────────────────────────────────────     const TableCard = ({ position }: { position: number }) => {
+  // ── Table card helper ─────────────────────────────────────────────────────
   const TableCard = ({ position }: { position: number }) => {
     const card = roomState.tableCards[position];
     if (!card) return <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-lg border border-dashed border-border/30 opacity-20" />;
@@ -184,7 +184,6 @@ export default function Game() {
       {/* Table */}
       <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
         {roomState.gameMode === 3 ? (
-          /* Ascensore: 3 sx  |  centro  |  3 dx  — griglia 3×3 */
           <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100">
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/70 mb-0.5">
               Ascensore
@@ -193,22 +192,18 @@ export default function Game() {
               className="grid gap-1 sm:gap-2"
               style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
             >
-              {/* riga 1 */}
               <TableCard position={1} />
               <div />
               <TableCard position={4} />
-              {/* riga 2 — centro */}
               <TableCard position={2} />
               <TableCard position={0} />
               <TableCard position={5} />
-              {/* riga 3 */}
               <TableCard position={3} />
               <div />
               <TableCard position={6} />
             </div>
           </div>
         ) : (
-          /* Croce 3×3 — Modalità 1 e 2 */
           <div
             className="grid gap-1.5 sm:gap-3 scale-90 sm:scale-100"
             style={{ gridTemplateColumns: 'auto auto auto', gridTemplateRows: 'auto auto auto' }}
@@ -216,11 +211,9 @@ export default function Game() {
             <div />
             <TableCard position={0} />
             <div />
-
             <TableCard position={1} />
             <TableCard position={2} />
             <TableCard position={3} />
-
             <div />
             <TableCard position={4} />
             <div />
@@ -228,9 +221,43 @@ export default function Game() {
         )}
       </div>
 
-      {/* Status Bar */}
-      <div className="h-10 sm:h-12 bg-black/40 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 py-1 gap-2 shrink-0">
-        {roomState.phase === 'discard' && (
+      {/* Status Bar / Selezione Modalità */}
+      <div className="h-16 sm:h-20 bg-black/40 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 py-1 gap-2 shrink-0">
+        {roomState.phase === 'mode-select' ? (
+          <div className="flex flex-col items-center gap-1">
+            {isDealer ? (
+              <>
+                <span className="font-serif font-bold text-primary text-xs sm:text-sm animate-pulse">
+                  Tocca a te (Mazziere): scegli la modalità di gioco
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => selectGameMode?.(1)}
+                    className="px-2.5 py-1 bg-primary/20 hover:bg-primary/30 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
+                  >
+                    Modalità 1
+                  </button>
+                  <button
+                    onClick={() => selectGameMode?.(2)}
+                    className="px-2.5 py-1 bg-primary/20 hover:bg-primary/30 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
+                  >
+                    Modalità 2
+                  </button>
+                  <button
+                    onClick={() => selectGameMode?.(3)}
+                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500 text-xs rounded-lg font-medium text-amber-300 transition-colors"
+                  >
+                    Ascensore (Mod. 3)
+                  </button>
+                </div>
+              </>
+            ) : (
+              <span className="font-serif text-muted-foreground text-xs sm:text-sm animate-pulse">
+                In attesa che il mazziere scelga la modalità...
+              </span>
+            )}
+          </div>
+        ) : roomState.phase === 'discard' ? (
           <div className="flex items-center gap-2 text-primary text-center">
             {isMyTurnToDiscard ? (
               <span className="font-serif animate-pulse font-bold tracking-wide text-xs sm:text-sm">
@@ -242,17 +269,13 @@ export default function Game() {
               </span>
             )}
           </div>
-        )}
-
-        {roomState.phase === 'playing' && !handResult && (
+        ) : roomState.phase === 'playing' && !handResult ? (
           <span className="font-serif text-muted-foreground tracking-wide text-xs sm:text-sm text-center">
             {isDealer
               ? 'Sei il Mazziere — clicca le carte al centro.'
               : 'Seleziona le carte per mostrare il tuo punto.'}
           </span>
-        )}
-
-        {roomState.phase === 'playing' && handResult && (
+        ) : roomState.phase === 'playing' && handResult ? (
           <div className="flex items-center gap-2 sm:gap-3">
             <span className={cn('font-serif font-bold text-base sm:text-lg tracking-wide', rankColor(handResult.rank))}>
               {handResult.name}
@@ -267,7 +290,7 @@ export default function Game() {
               Deseleziona
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Hand Area */}
@@ -275,7 +298,6 @@ export default function Game() {
         'bg-card/30 border-t border-border pt-6 pb-6 sm:pb-8 relative shrink-0',
         isMyTurnToDiscard && 'bg-primary/5 border-primary/20'
       )}>
-        {/* Player name badge */}
         <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 z-10 text-xs">
           {me?.isDealer && <Crown className="w-3.5 h-3.5 text-primary" />}
           <span className="font-serif font-medium">{playerName}</span>
@@ -288,8 +310,6 @@ export default function Game() {
         )}
 
         <div className="flex items-end justify-center gap-6 sm:gap-10 px-2 max-w-4xl mx-auto flex-wrap">
-
-          {/* Fan carte coperte */}
           {hiddenCards.length > 0 && (
             <div className="flex justify-center scale-90 sm:scale-100 origin-bottom">
               {hiddenCards.map((card, i) => (
@@ -319,7 +339,6 @@ export default function Game() {
             </div>
           )}
 
-          {/* Carta scoperta isolata */}
           {revealedCards.length > 0 && (
             <div className="flex flex-col items-center gap-1 scale-90 sm:scale-100 origin-bottom">
               <span className="text-[9px] font-bold uppercase tracking-widest text-primary border border-primary/40 px-2 py-0.2 rounded-full bg-primary/10 whitespace-nowrap">
@@ -349,36 +368,6 @@ export default function Game() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Fallback: tutte le carte non classificate */}
-          {hiddenCards.length === 0 && revealedCards.length === 0 && hand.length > 0 && (
-            <div className="flex justify-center scale-90 sm:scale-100 origin-bottom">
-              {hand.map((card, i) => (
-                <div
-                  key={card.id}
-                  className={cn(
-                    'transition-all duration-300 hover:z-20',
-                    (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
-                    !selectedIds.has(card.id) && 'hover:-translate-y-3',
-                    selectedIds.has(card.id) && '-translate-y-6',
-                    i > 0 && '-ml-6 sm:-ml-4'
-                  )}
-                  style={{ zIndex: selectedIds.has(card.id) ? 30 : i }}
-                >
-                  <PlayingCard
-                    card={{ ...card, faceUp: true }}
-                    size="lg"
-                    onClick={() => {
-                      if (isMyTurnToDiscard) handleDiscard(card.id);
-                      else toggleCard(card.id);
-                    }}
-                    highlighted={isMyTurnToDiscard}
-                    selected={canSelect && selectedIds.has(card.id)}
-                  />
-                </div>
-              ))}
             </div>
           )}
         </div>
