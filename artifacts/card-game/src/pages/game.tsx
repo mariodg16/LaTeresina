@@ -8,7 +8,7 @@ import { Crown, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Game() {
-  const { roomState, playerName, hand, discardCard, revealTableCard, showCards, selectGameMode, startRound } = useGame();
+  const { roomState, playerName, hand, discardCard, revealTableCard, showCards, startGame } = useGame();
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -104,7 +104,7 @@ export default function Game() {
   // Calcola il punteggio solo se le carte a terra formano una linea valida
   const handResult = (allSelected.length >= 1 && tableValid) ? evaluateBestHand(allSelected) : null;
 
-  // ── Handlers ────────────────────────────────________________─────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const handleDiscard = (cardId: string) => {
     if (isMyTurnToDiscard) discardCard(cardId).catch(console.error);
   };
@@ -137,7 +137,7 @@ export default function Game() {
     return 'text-muted-foreground';
   };
 
-  // ── Table card helper ─────────────────────────────────────────────────────
+  // ── Table card helper ────────────────────────────────────────────────     const TableCard = ({ position }: { position: number }) => {
   const TableCard = ({ position }: { position: number }) => {
     const card = roomState.tableCards[position];
     if (!card) return <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-lg border border-dashed border-border/30 opacity-20" />;
@@ -273,51 +273,40 @@ export default function Game() {
         )}
       </div>
 
-      {/* Status Bar / Selezione Modalità / Pulsante Distribuisci */}
+      {/* Status Bar / Selezione Modalità / Distribuzione */}
       <div className="min-h-[4rem] sm:h-20 bg-black/50 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 py-2 gap-2 shrink-0">
         
-        {/* Pulsante rapido per distribuire le carte in qualsiasi momento (visibile al mazziere o a tutti se in pausa/lobby) */}
-        {isDealer && (roomState.phase === 'ended' || roomState.phase === 'mode-select') && (
-          <button
-            onClick={() => startRound?.()}
-            className="absolute right-3 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg shadow-lg flex items-center gap-1.5 transition-all animate-bounce"
-          >
-            <Play className="w-3.5 h-3.5" />
-            Distribuisci
-          </button>
-        )}
-
-        {roomState.phase === 'mode-select' ? (
-          <div className="flex flex-col items-center gap-1.5 w-full">
+        {roomState.phase === 'lobby' || roomState.phase === 'mode_selection' ? (
+          <div className="flex flex-col items-center gap-2 w-full">
             {isDealer ? (
               <>
-                <span className="font-serif font-bold text-primary text-xs sm:text-sm text-center">
-                  Mazziere (#{dealerIndex + 1}): scegli la modalità
+                <span className="font-serif font-bold text-primary text-xs sm:text-sm text-center animate-pulse">
+                  Mazziere (#{dealerIndex + 1}): Scegli la modalità per distribuire
                 </span>
-                <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   <button
-                    onClick={() => selectGameMode?.(1)}
-                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-[11px] sm:text-xs rounded-lg font-medium text-foreground transition-colors whitespace-nowrap"
+                    onClick={() => startGame(1)}
+                    className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs rounded-lg font-bold shadow-[0_0_10px_rgba(201,168,76,0.3)] transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                   >
-                    Mod. 1 (Croce)
+                    <Play className="w-3.5 h-3.5" /> Mod. 1
                   </button>
                   <button
-                    onClick={() => selectGameMode?.(2)}
-                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-[11px] sm:text-xs rounded-lg font-medium text-foreground transition-colors whitespace-nowrap"
+                    onClick={() => startGame(2)}
+                    className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs rounded-lg font-bold shadow-[0_0_10px_rgba(201,168,76,0.3)] transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                   >
-                    Mod. 2 (Croce)
+                    <Play className="w-3.5 h-3.5" /> Mod. 2
                   </button>
                   <button
-                    onClick={() => selectGameMode?.(3)}
-                    className="px-2.5 py-1 bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500 text-[11px] sm:text-xs rounded-lg font-medium text-amber-300 transition-colors whitespace-nowrap"
+                    onClick={() => startGame(3)}
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-amber-950 text-xs rounded-lg font-bold shadow-[0_0_10px_rgba(245,158,11,0.3)] transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                   >
-                    Ascensore (Mod. 3)
+                    <Play className="w-3.5 h-3.5" /> Ascensore (Mod. 3)
                   </button>
                 </div>
               </>
             ) : (
               <span className="font-serif text-muted-foreground text-xs sm:text-sm text-center animate-pulse px-2">
-                In attesa che il mazziere scelga la modalità...
+                In attesa che il mazziere distribuisca le carte...
               </span>
             )}
           </div>
@@ -374,8 +363,6 @@ export default function Game() {
             </span>
           )}
         </div>
-
-        {/* Rimossa la scritta fissa "Clicca per selezionare" ed evitati tagli di testo */}
 
         <div className="flex items-end justify-center gap-6 sm:gap-10 px-2 max-w-4xl mx-auto flex-wrap">
           {hiddenCards.length > 0 && (
