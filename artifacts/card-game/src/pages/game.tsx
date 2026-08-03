@@ -56,13 +56,46 @@ export default function Game() {
 
   const clearSelection = () => setSelectedIds(new Set());
 
-  // Collect selected cards for evaluation
+  // ── Validazione linee delle carte a terra ──────────────────────────────
+  const isTableSelectionValid = (selectedPositions: number[]) => {
+    if (selectedPositions.length === 0) return true;
+    const mode = roomState.gameMode;
+
+    if (mode === 3) {
+      // Ascensore: ammette le 3 righe orizzontali
+      const validLines = [
+        [1, 4],       // Riga 1
+        [2, 0, 5],    // Riga 2 (centro)
+        [3, 6]        // Riga 3
+      ];
+      return validLines.some(line => selectedPositions.every(pos => line.includes(pos)));
+    } else {
+      // Modalità Croce standard (1 e 2)
+      const validLines = [
+        [0, 2, 4],    // Verticale
+        [1, 2, 3]     // Orizzontale
+      ];
+      return validLines.some(line => selectedPositions.every(pos => line.includes(pos)));
+    }
+  };
+
+  // Raccoglie le carte selezionate dalla mano e dal tavolo
   const selectedHandCards = hand.filter(c => selectedIds.has(c.id));
-  const selectedTableCards = roomState.tableCards.filter(
-    (c): c is Card => c !== null && c.faceUp === true && 'suit' in c && selectedIds.has(c.id)
-  );
+  
+  const selectedTableEntries = roomState.tableCards
+    .map((c, idx) => ({ card: c, idx }))
+    .filter(({ card }) => card !== null && card.faceUp === true && 'suit' in card && selectedIds.has(card!.id));
+
+  const selectedTableCards = selectedTableEntries.map(e => e.card as Card);
+  const selectedTablePositions = selectedTableEntries.map(e => e.idx);
+
+  // Verifica se la selezione a terra rispetta le linee consentite
+  const tableValid = isTableSelectionValid(selectedTablePositions);
+
   const allSelected = [...selectedHandCards, ...selectedTableCards];
-  const handResult = allSelected.length >= 1 ? evaluateBestHand(allSelected) : null;
+  
+  // Calcola il punteggio solo se le carte a terra formano una linea valida
+  const handResult = (allSelected.length >= 1 && tableValid) ? evaluateBestHand(allSelected) : null;
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleDiscard = (cardId: string) => {
@@ -233,19 +266,19 @@ export default function Game() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => selectGameMode?.(1)}
-                    className="px-2.5 py-1 bg-primary/20 hover:bg-primary/30 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
+                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
                   >
                     Modalità 1
                   </button>
                   <button
                     onClick={() => selectGameMode?.(2)}
-                    className="px-2.5 py-1 bg-primary/20 hover:bg-primary/30 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
+                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
                   >
                     Modalità 2
                   </button>
                   <button
                     onClick={() => selectGameMode?.(3)}
-                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500 text-xs rounded-lg font-medium text-amber-300 transition-colors"
+                    className="px-2.5 py-1 bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500 text-xs rounded-lg font-medium text-amber-300 transition-colors"
                   >
                     Ascensore (Mod. 3)
                   </button>
@@ -273,7 +306,9 @@ export default function Game() {
           <span className="font-serif text-muted-foreground tracking-wide text-xs sm:text-sm text-center">
             {isDealer
               ? 'Sei il Mazziere — clicca le carte al centro.'
-              : 'Seleziona le carte per mostrare il tuo punto.'}
+              : !tableValid 
+                ? '⚠️ Selezione a terra non valida (usa righe o colonne corrette)'
+                : 'Seleziona le carte per mostrare il tuo punto.'}
           </span>
         ) : roomState.phase === 'playing' && handResult ? (
           <div className="flex items-center gap-2 sm:gap-3">
