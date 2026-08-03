@@ -44,11 +44,18 @@ export default function Game() {
 
   if (!roomState) return null;
 
-  const me = roomState.players.find(p => p.name === playerName);
+  // Ordiniamo i giocatori in base all'ordine in cui sono entrati nella stanza (indice nell'array)
+  const players = roomState.players;
+  const me = players.find(p => p.name === playerName);
+  const myIndex = players.findIndex(p => p.name === playerName);
   const isDealer = me?.isDealer ?? false;
   const isMyTurnToDiscard =
     roomState.phase === 'discard' && roomState.currentDiscardPlayerId === me?.socketId;
-  const otherPlayers = roomState.players.filter(p => p.name !== playerName);
+  const otherPlayers = players.filter(p => p.name !== playerName);
+
+  // Trova l'indice del mazziere e calcola chi è alla sua destra (giocatore successivo nell'ordine)
+  const dealerIndex = players.findIndex(p => p.isDealer);
+  const rightOfDealerIndex = dealerIndex !== -1 ? (dealerIndex + 1) % players.length : -1;
 
   // ── Split mano: coperte vs scoperta ─────────────────────────────────────
   const hiddenCards = hand.filter(c => !c.faceUp);
@@ -118,7 +125,7 @@ export default function Game() {
     }
   };
 
-  const currentDiscardPlayer = roomState.players.find(
+  const currentDiscardPlayer = players.find(
     p => p.socketId === roomState.currentDiscardPlayerId
   );
 
@@ -153,65 +160,77 @@ export default function Game() {
 
       {/* Opponents Row */}
       <div className="py-2 flex justify-center gap-2 sm:gap-4 px-2 flex-wrap shrink-0">
-        {otherPlayers.map(p => (
-          <div
-            key={p.socketId}
-            className={cn(
-              'flex flex-col items-center gap-0.5 transition-all scale-90 sm:scale-100',
-              roomState.phase === 'discard' && roomState.currentDiscardPlayerId === p.socketId
-                ? 'scale-105 opacity-100'
-                : 'opacity-80'
-            )}
-          >
-            {/* Hand silhouette + visible cards */}
-            <div className="flex relative items-end">
-              {Array.from({ length: p.cardCount }).map((_, i) => {
-                const visible = p.visibleCards?.[i - (p.cardCount - (p.visibleCards?.length ?? 0))];
-                const isVisible = i >= p.cardCount - (p.visibleCards?.length ?? 0) && visible;
-                return isVisible ? (
-                  <div key={i} className={cn('shrink-0', i > 0 && '-ml-3')} style={{ zIndex: i }}>
-                    <PlayingCard card={{ ...visible, faceUp: true }} size="sm" />
-                  </div>
-                ) : (
-                  <div
-                    key={i}
-                    className={cn(
-                      'w-6 h-9 sm:w-8 sm:h-12 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
-                      i > 0 && '-ml-3'
-                    )}
-                    style={{ zIndex: i }}
-                  />
-                );
-              })}
-            </div>
+        {otherPlayers.map(p => {
+          const pIndex = players.findIndex(item => item.socketId === p.socketId);
+          const isRightOfDealer = pIndex === rightOfDealerIndex;
 
-            {/* Name badge */}
-            <div className="bg-card/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border text-[10px] sm:text-xs flex items-center gap-1.5 shadow-lg">
-              {p.isDealer && <Crown className="w-2.5 h-2.5 text-primary" />}
-              <span className="font-serif truncate max-w-[70px] sm:max-w-[90px]">{p.name}</span>
-              <span className="text-primary font-mono">{p.cardCount}</span>
-            </div>
-
-            {/* Carte che l'avversario sta mostrando */}
-            {p.shownCards && p.shownCards.length > 0 && (
-              <div className="flex flex-col items-center gap-0.5 mt-0.5">
-                <span className="text-[8px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-1.5 py-0.2 rounded-full">
-                  Mostra
-                </span>
-                <div className="flex gap-1">
-                  {p.shownCards.map(card => (
-                    <PlayingCard
-                      key={card.id}
-                      card={{ ...card, faceUp: true }}
-                      size="sm"
-                      selected
+          return (
+            <div
+              key={p.socketId}
+              className={cn(
+                'flex flex-col items-center gap-0.5 transition-all scale-90 sm:scale-100',
+                roomState.phase === 'discard' && roomState.currentDiscardPlayerId === p.socketId
+                  ? 'scale-105 opacity-100'
+                  : 'opacity-80'
+              )}
+            >
+              {/* Hand silhouette + visible cards */}
+              <div className="flex relative items-end">
+                {Array.from({ length: p.cardCount }).map((_, i) => {
+                  const visible = p.visibleCards?.[i - (p.cardCount - (p.visibleCards?.length ?? 0))];
+                  const isVisible = i >= p.cardCount - (p.visibleCards?.length ?? 0) && visible;
+                  return isVisible ? (
+                    <div key={i} className={cn('shrink-0', i > 0 && '-ml-3')} style={{ zIndex: i }}>
+                      <PlayingCard card={{ ...visible, faceUp: true }} size="sm" />
+                    </div>
+                  ) : (
+                    <div
+                      key={i}
+                      className={cn(
+                        'w-6 h-9 sm:w-8 sm:h-12 bg-zinc-800 rounded-sm border border-zinc-600 shadow-sm shrink-0',
+                        i > 0 && '-ml-3'
+                      )}
+                      style={{ zIndex: i }}
                     />
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Name badge con numero progressivo e indicazione destra mazziere */}
+              <div className="bg-card/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border text-[10px] sm:text-xs flex items-center gap-1.5 shadow-lg">
+                <span className="font-mono text-primary font-bold">#{pIndex + 1}</span>
+                {p.isDealer && <Crown className="w-2.5 h-2.5 text-primary" />}
+                <span className="font-serif truncate max-w-[70px] sm:max-w-[90px]">{p.name}</span>
+                <span className="text-primary font-mono">({p.cardCount})</span>
+              </div>
+
+              {isRightOfDealer && (
+                <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold">
+                  A destra (1° di mano)
+                </span>
+              )}
+
+              {/* Carte che l'avversario sta mostrando */}
+              {p.shownCards && p.shownCards.length > 0 && (
+                <div className="flex flex-col items-center gap-0.5 mt-0.5">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-1.5 py-0.2 rounded-full">
+                    Mostra
+                  </span>
+                  <div className="flex gap-1">
+                    {p.shownCards.map(card => (
+                      <PlayingCard
+                        key={card.id}
+                        card={{ ...card, faceUp: true }}
+                        size="sm"
+                        selected
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Table */}
@@ -261,7 +280,7 @@ export default function Game() {
             {isDealer ? (
               <>
                 <span className="font-serif font-bold text-primary text-xs sm:text-sm animate-pulse">
-                  Tocca a te (Mazziere): scegli la modalità di gioco
+                  Tocca a te (Mazziere #{dealerIndex + 1}): scegli la modalità di gioco
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -333,9 +352,15 @@ export default function Game() {
         'bg-card/30 border-t border-border pt-6 pb-6 sm:pb-8 relative shrink-0',
         isMyTurnToDiscard && 'bg-primary/5 border-primary/20'
       )}>
-        <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 z-10 text-xs">
+        <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-2 z-10 text-xs">
+          <span className="font-mono text-primary font-bold">#{myIndex !== -1 ? myIndex + 1 : 1}</span>
           {me?.isDealer && <Crown className="w-3.5 h-3.5 text-primary" />}
           <span className="font-serif font-medium">{playerName}</span>
+          {myIndex === rightOfDealerIndex && (
+            <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold ml-1">
+              A destra (1° di mano)
+            </span>
+          )}
         </div>
 
         {canSelect && (
