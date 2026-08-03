@@ -122,11 +122,14 @@ export default function Game() {
     }
   };
 
-  // Funzione protetta per testare la distribuzione con log in console
-  const handleTriggerStart = () => {
+  const handleTriggerStart = async () => {
     console.log("Tentativo di avvio/distribuzione con modalità:", selectedMode);
     if (typeof startGame === 'function') {
-      startGame(selectedMode);
+      try {
+        await startGame(selectedMode);
+      } catch (err) {
+        console.error("Impossibile distribuire in questo momento (partita già iniziata o errore server):", err);
+      }
     } else {
       console.error("startGame non è una funzione disponibile nel context!");
     }
