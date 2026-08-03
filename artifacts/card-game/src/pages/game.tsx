@@ -11,6 +11,16 @@ export default function Game() {
   const { roomState, playerName, hand, discardCard, revealTableCard, showCards, startGame } = useGame();
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Stato locale per ricordare l'ultima modalità scelta (default 1)
+  const [selectedMode, setSelectedMode] = useState<number>(1);
+
+  // Aggiorna la modalità scelta se la stanza ne ha già una attiva
+  useEffect(() => {
+    if (roomState?.gameMode) {
+      setSelectedMode(roomState.gameMode);
+    }
+  }, [roomState?.gameMode]);
 
   useEffect(() => {
     if (!roomState) {
@@ -64,7 +74,7 @@ export default function Game() {
 
   const isTableSelectionValid = (selectedPositions: number[]) => {
     if (selectedPositions.length === 0) return true;
-    const mode = roomState.gameMode;
+    const mode = roomState.gameMode || selectedMode;
 
     if (mode === 3) {
       const validLines = [
@@ -146,20 +156,29 @@ export default function Game() {
   return (
     <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden select-none">
 
-      {/* Pulsante fluttuante sempre visibile per il mazziere */}
+      {/* Pulsante fluttuante e selettore modalità per il mazziere */}
       {isDealer && (
-        <div className="absolute top-2 right-2 z-30 flex items-center gap-1 bg-card/90 border border-border p-1 rounded-lg shadow-lg backdrop-blur-md">
+        <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5 bg-card/90 border border-border p-1.5 rounded-lg shadow-lg backdrop-blur-md">
+          <select 
+            value={selectedMode} 
+            onChange={(e) => setSelectedMode(Number(e.target.value))}
+            className="bg-background text-foreground text-[11px] border border-border rounded px-1.5 py-0.5 outline-none cursor-pointer"
+          >
+            <option value={1}>Mod. 1</option>
+            <option value={2}>Mod. 2</option>
+            <option value={3}>Ascensore</option>
+          </select>
           <button
-            onClick={() => startGame(roomState.gameMode || 1)}
-            className="px-2 py-0.5 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold rounded shadow flex items-center gap-1 cursor-pointer transition-all"
-            title="Ridistribuisci carte"
+            onClick={() => startGame(selectedMode)}
+            className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold rounded shadow flex items-center gap-1 cursor-pointer transition-all"
+            title="Distribuisci carte"
           >
             <RotateCcw className="w-3 h-3" /> Distribuisci
           </button>
         </div>
       )}
 
-      {/* Opponents Row - Compatta per non tagliare nulla in alto */}
+      {/* Opponents Row */}
       <div className="pt-1.5 pb-1 flex justify-center gap-2 sm:gap-4 px-2 flex-wrap shrink-0">
         {otherPlayers.map(p => {
           const pIndex = players.findIndex(item => item.socketId === p.socketId);
@@ -231,9 +250,9 @@ export default function Game() {
         })}
       </div>
 
-      {/* Table - Spazio centrale ottimizzato */}
+      {/* Table */}
       <div className="flex-1 flex items-center justify-center p-1 overflow-hidden">
-        {roomState.gameMode === 3 ? (
+        {(roomState.gameMode || selectedMode) === 3 ? (
           <div className="flex flex-col items-center gap-0.5 scale-85 sm:scale-95">
             <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/70 mb-0.5">
               Ascensore
