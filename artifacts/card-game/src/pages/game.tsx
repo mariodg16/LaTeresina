@@ -4,11 +4,11 @@ import { useGame } from '@/lib/game-context';
 import type { Card } from '@/lib/game-context';
 import { PlayingCard } from '@/components/card';
 import { evaluateBestHand } from '@/lib/poker';
-import { Crown } from 'lucide-react';
+import { Crown, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Game() {
-  const { roomState, playerName, hand, discardCard, revealTableCard, showCards, selectGameMode } = useGame();
+  const { roomState, playerName, hand, discardCard, revealTableCard, showCards, selectGameMode, startRound } = useGame();
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -44,7 +44,7 @@ export default function Game() {
 
   if (!roomState) return null;
 
-  // Ordiniamo i giocatori in base all'ordine in cui sono entrati nella stanza (indice nell'array)
+  // Ordiniamo i giocatori in base all'ordine in cui sono entrati nella stanza
   const players = roomState.players;
   const me = players.find(p => p.name === playerName);
   const myIndex = players.findIndex(p => p.name === playerName);
@@ -53,7 +53,7 @@ export default function Game() {
     roomState.phase === 'discard' && roomState.currentDiscardPlayerId === me?.socketId;
   const otherPlayers = players.filter(p => p.name !== playerName);
 
-  // Trova l'indice del mazziere e calcola chi è alla sua destra (giocatore successivo nell'ordine)
+  // Trova l'indice del mazziere e calcola chi è alla sua destra
   const dealerIndex = players.findIndex(p => p.isDealer);
   const rightOfDealerIndex = dealerIndex !== -1 ? (dealerIndex + 1) % players.length : -1;
 
@@ -104,7 +104,7 @@ export default function Game() {
   // Calcola il punteggio solo se le carte a terra formano una linea valida
   const handResult = (allSelected.length >= 1 && tableValid) ? evaluateBestHand(allSelected) : null;
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
+  // ── Handlers ────────────────────────────────________________─────────────
   const handleDiscard = (cardId: string) => {
     if (isMyTurnToDiscard) discardCard(cardId).catch(console.error);
   };
@@ -196,21 +196,21 @@ export default function Game() {
                 })}
               </div>
 
-              {/* Name badge con numero progressivo e indicazione destra mazziere */}
-              <div className="bg-card/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border text-[10px] sm:text-xs flex items-center gap-1.5 shadow-lg">
+              {/* Name badge */}
+              <div className="bg-card/90 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border text-[10px] sm:text-xs flex items-center gap-1 shadow-lg whitespace-nowrap">
                 <span className="font-mono text-primary font-bold">#{pIndex + 1}</span>
-                {p.isDealer && <Crown className="w-2.5 h-2.5 text-primary" />}
-                <span className="font-serif truncate max-w-[70px] sm:max-w-[90px]">{p.name}</span>
+                {p.isDealer && <Crown className="w-2.5 h-2.5 text-primary shrink-0" />}
+                <span className="font-serif truncate max-w-[60px] sm:max-w-[80px]">{p.name}</span>
                 <span className="text-primary font-mono">({p.cardCount})</span>
               </div>
 
               {isRightOfDealer && (
-                <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold">
-                  A destra (1° di mano)
+                <span className="text-[7px] sm:text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold whitespace-nowrap">
+                  1° di mano
                 </span>
               )}
 
-              {/* Carte che l'avversario sta mostrando */}
+              {/* Carte mostrate */}
               {p.shownCards && p.shownCards.length > 0 && (
                 <div className="flex flex-col items-center gap-0.5 mt-0.5">
                   <span className="text-[8px] font-bold uppercase tracking-widest text-primary/80 bg-primary/10 border border-primary/30 px-1.5 py-0.2 rounded-full">
@@ -273,56 +273,68 @@ export default function Game() {
         )}
       </div>
 
-      {/* Status Bar / Selezione Modalità */}
-      <div className="h-16 sm:h-20 bg-black/40 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 py-1 gap-2 shrink-0">
+      {/* Status Bar / Selezione Modalità / Pulsante Distribuisci */}
+      <div className="min-h-[4rem] sm:h-20 bg-black/50 backdrop-blur-md border-y border-border flex items-center justify-center relative z-20 px-3 py-2 gap-2 shrink-0">
+        
+        {/* Pulsante rapido per distribuire le carte in qualsiasi momento (visibile al mazziere o a tutti se in pausa/lobby) */}
+        {isDealer && (roomState.phase === 'ended' || roomState.phase === 'mode-select') && (
+          <button
+            onClick={() => startRound?.()}
+            className="absolute right-3 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg shadow-lg flex items-center gap-1.5 transition-all animate-bounce"
+          >
+            <Play className="w-3.5 h-3.5" />
+            Distribuisci
+          </button>
+        )}
+
         {roomState.phase === 'mode-select' ? (
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-1.5 w-full">
             {isDealer ? (
               <>
-                <span className="font-serif font-bold text-primary text-xs sm:text-sm animate-pulse">
-                  Tocca a te (Mazziere #{dealerIndex + 1}): scegli la modalità di gioco
+                <span className="font-serif font-bold text-primary text-xs sm:text-sm text-center">
+                  Mazziere (#{dealerIndex + 1}): scegli la modalità
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                   <button
                     onClick={() => selectGameMode?.(1)}
-                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
+                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-[11px] sm:text-xs rounded-lg font-medium text-foreground transition-colors whitespace-nowrap"
                   >
-                    Modalità 1
+                    Mod. 1 (Croce)
                   </button>
                   <button
                     onClick={() => selectGameMode?.(2)}
-                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-xs rounded-lg font-medium text-foreground transition-colors"
+                    className="px-2.5 py-1 bg-primary/25 hover:bg-primary/35 border border-primary text-[11px] sm:text-xs rounded-lg font-medium text-foreground transition-colors whitespace-nowrap"
                   >
-                    Modalità 2
+                    Mod. 2 (Croce)
                   </button>
                   <button
                     onClick={() => selectGameMode?.(3)}
-                    className="px-2.5 py-1 bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500 text-xs rounded-lg font-medium text-amber-300 transition-colors"
+                    className="px-2.5 py-1 bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500 text-[11px] sm:text-xs rounded-lg font-medium text-amber-300 transition-colors whitespace-nowrap"
                   >
                     Ascensore (Mod. 3)
                   </button>
                 </div>
               </>
             ) : (
-              <span className="font-serif text-muted-foreground text-xs sm:text-sm animate-pulse">
+              <span className="font-serif text-muted-foreground text-xs sm:text-sm text-center animate-pulse px-2">
                 In attesa che il mazziere scelga la modalità...
               </span>
             )}
           </div>
         ) : roomState.phase === 'discard' ? (
-          <div className="flex items-center gap-2 text-primary text-center">
+          <div className="flex items-center justify-center text-primary text-center px-2">
             {isMyTurnToDiscard ? (
               <span className="font-serif animate-pulse font-bold tracking-wide text-xs sm:text-sm">
                 È IL TUO TURNO — Seleziona una carta da passare
               </span>
             ) : (
-              <span className="font-serif text-muted-foreground text-xs sm:text-sm">
+              <span className="font-serif text-muted-foreground text-xs sm:text-sm truncate">
                 Fase di scarto — In attesa di {currentDiscardPlayer?.name}...
               </span>
             )}
           </div>
         ) : roomState.phase === 'playing' && !handResult ? (
-          <span className="font-serif text-muted-foreground tracking-wide text-xs sm:text-sm text-center">
+          <span className="font-serif text-muted-foreground tracking-wide text-xs sm:text-sm text-center px-2">
             {isDealer
               ? 'Sei il Mazziere — clicca le carte al centro.'
               : !tableValid 
@@ -330,16 +342,16 @@ export default function Game() {
                 : 'Seleziona le carte per mostrare il tuo punto.'}
           </span>
         ) : roomState.phase === 'playing' && handResult ? (
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className={cn('font-serif font-bold text-base sm:text-lg tracking-wide', rankColor(handResult.rank))}>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+            <span className={cn('font-serif font-bold text-sm sm:text-lg tracking-wide', rankColor(handResult.rank))}>
               {handResult.name}
             </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground">
+            <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
               ({allSelected.length} {allSelected.length === 1 ? 'carta' : 'carte'})
             </span>
             <button
               onClick={clearSelection}
-              className="text-xs text-muted-foreground hover:text-foreground underline ml-1 transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground underline ml-1 transition-colors whitespace-nowrap"
             >
               Deseleziona
             </button>
@@ -349,25 +361,21 @@ export default function Game() {
 
       {/* Hand Area */}
       <div className={cn(
-        'bg-card/30 border-t border-border pt-6 pb-6 sm:pb-8 relative shrink-0',
+        'bg-card/30 border-t border-border pt-5 pb-6 sm:pb-8 relative shrink-0',
         isMyTurnToDiscard && 'bg-primary/5 border-primary/20'
       )}>
-        <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-2 z-10 text-xs">
+        <div className="absolute top-0 left-4 -translate-y-1/2 bg-card border border-border px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 z-10 text-xs whitespace-nowrap">
           <span className="font-mono text-primary font-bold">#{myIndex !== -1 ? myIndex + 1 : 1}</span>
-          {me?.isDealer && <Crown className="w-3.5 h-3.5 text-primary" />}
-          <span className="font-serif font-medium">{playerName}</span>
+          {me?.isDealer && <Crown className="w-3.5 h-3.5 text-primary shrink-0" />}
+          <span className="font-serif font-medium truncate max-w-[100px] sm:max-w-[140px]">{playerName}</span>
           {myIndex === rightOfDealerIndex && (
-            <span className="text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold ml-1">
-              A destra (1° di mano)
+            <span className="text-[8px] sm:text-[9px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded-full uppercase tracking-wider font-semibold ml-1">
+              1° di mano
             </span>
           )}
         </div>
 
-        {canSelect && (
-          <div className="absolute top-0 right-4 -translate-y-1/2 bg-card/80 border border-border px-2.5 py-0.5 rounded-full text-[10px] text-muted-foreground">
-            Clicca per selezionare
-          </div>
-        )}
+        {/* Rimossa la scritta fissa "Clicca per selezionare" ed evitati tagli di testo */}
 
         <div className="flex items-end justify-center gap-6 sm:gap-10 px-2 max-w-4xl mx-auto flex-wrap">
           {hiddenCards.length > 0 && (
@@ -376,7 +384,7 @@ export default function Game() {
                 <div
                   key={card.id}
                   className={cn(
-                    'transition-all duration-300 hover:z-20',
+                    'transition-all duration-150 hover:z-20',
                     (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
                     !selectedIds.has(card.id) && 'hover:-translate-y-3',
                     selectedIds.has(card.id) && '-translate-y-6',
@@ -409,7 +417,7 @@ export default function Game() {
                   <div
                     key={card.id}
                     className={cn(
-                      'transition-all duration-300',
+                      'transition-all duration-150',
                       (canSelect || isMyTurnToDiscard) && 'cursor-pointer',
                       !selectedIds.has(card.id) && 'hover:-translate-y-3',
                       selectedIds.has(card.id) && '-translate-y-6',
