@@ -80,7 +80,7 @@ export function PlayingCard({
       onClick={onClick}
     >
       <div
-        className="w-full h-full relative transition-transform duration-500 rounded-lg"
+        className="w-full h-full relative transition-transform duration-150 rounded-lg"
         style={{
           transformStyle: 'preserve-3d',
           transform: isFaceUp ? 'rotateY(180deg)' : 'rotateY(0deg)',
