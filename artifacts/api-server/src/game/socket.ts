@@ -79,7 +79,9 @@ export function setupSocketIO(io: Server) {
 
           const player = room.players.find((p) => p.socketId === socket.id);
           if (!player?.isDealer) { callback({ ok: false, error: "Solo il mazziere può iniziare" }); return; }
-          if (room.phase !== "lobby") { callback({ ok: false, error: "Partita già iniziata" }); return; }
+          
+          // MODIFICA QUI: Rimuoviamo il blocco rigido su room.phase !== "lobby" 
+          // per permettere la ridistribuzione a partita in corso.
           if (room.players.length < 2) { callback({ ok: false, error: "Servono almeno 2 giocatori" }); return; }
 
           const raw = Number(data?.mode);
@@ -87,7 +89,7 @@ export function setupSocketIO(io: Server) {
           const ok = dealCards(room, mode);
           if (!ok) { callback({ ok: false, error: "Errore nella distribuzione" }); return; }
 
-          logger.info({ roomCode: room.code, mode }, "Game started");
+          logger.info({ roomCode: room.code, mode }, "Game started / restarted");
           callback({ ok: true });
 
           // Broadcast public state to all
@@ -103,7 +105,7 @@ export function setupSocketIO(io: Server) {
         }
       }
     );
-
+    
     // ── Reveal table card (dealer only) ──────────────────────────────────────
     socket.on(
       "reveal_table_card",
