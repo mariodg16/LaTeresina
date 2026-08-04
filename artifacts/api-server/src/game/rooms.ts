@@ -54,7 +54,6 @@ export function joinRoom(
   const room = rooms.get(code);
   if (!room) return { error: "NOT_FOUND" };
   if (room.password !== password) return { error: "WRONG_PASSWORD" };
-  if (room.phase !== "lobby") return { error: "GAME_STARTED" };
   if (room.players.length >= 7) return { error: "ROOM_FULL" };
   if (room.players.some((p) => p.socketId === socketId)) return { error: "ALREADY_IN" };
 
